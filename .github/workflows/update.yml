@@ -1,0 +1,37 @@
+name: Update ASX market scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 7 * * 1-5'
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: Scan ASX stocks
+        run: python scanner.py
+
+      - name: Save updated market data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if ! git diff --cached --quiet; then
+            git commit -m "Update ASX stock data"
+            git push
+          fi
