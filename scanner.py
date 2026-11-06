@@ -14,7 +14,7 @@ KNOWN_NAMES={'BHP': 'BHP Group Limited', 'CBA': 'Commonwealth Bank of Australia'
 DEFAULT=['BHP','CBA','CSL','WBC','NAB','ANZ','MQG','WES','WOW','RIO','FMG','TLS','GMG','TCL','ALL','XRO','NXT','MP1','SLC','CHC','PLS','LTR','IGO','MIN','PXA','HUB','NWL','AMP','NST','WDS','STO','QAN','REA','CAR','CPU','RMD','COH','JHX','COL','ORG','AGL','SUN','IAG','QBE','S32','ALD','AMC','SHL','PME','TWE','JBH','DMP','A2M','MFG','ZIP','NEA','GQG','SEK','SGP','GPT','SCG','VCX','MGR','DXS','RHC','ILU','ORI','BSL','LYC','PDN','BOE','DRO','HMC','SIG','LNW']
 
 def universe():
-    """Only explicitly user-confirmed Plus500 instruments, never general exchange lists."""
+    """Public Plus500 directory candidates and previously user-confirmed entries."""
     path=ROOT/'plus500_watchlist.csv'
     rows=list(csv.DictReader(path.open(encoding='utf-8-sig',newline='')))
     confirmed=[]
@@ -58,11 +58,11 @@ def score(history, code):
     long+=15 if r60 is not None and r60>0 else 0
     long+=10 if sma20>sma50 else 0
     # Long-term score is price-trend only; fundamentals not included.
-    return dict(ticker=code,price=last,change_pct=daily,return_5d=r5,return_20d=r20,return_60d=r60,volume_ratio=volratio,avg_turnover_aud=turnover,short_score=max(0,min(100,short)),long_score=max(0,min(100,long)),sma20=sma20,sma50=sma50,sma200=sma200,breakout=bool(hi20 and last>hi20),history=[{'date':str(d.date()),'close':round(float(p),3)} for d,p in c.tail(90).items()])
+    return dict(ticker=code,price=last,change_pct=daily,return_5d=r5,return_20d=r20,return_60d=r60,volume_ratio=volratio,avg_turnover_native=turnover,short_score=max(0,min(100,short)),long_score=max(0,min(100,long)),sma20=sma20,sma50=sma50,sma200=sma200,breakout=bool(hi20 and last>hi20),history=[{'date':str(d.date()),'close':round(float(p),3)} for d,p in c.tail(90).items()])
 
 def main():
     entries=universe(); results=[]; errors=[]
-    print('Confirmed Plus500 watchlist:',len(entries))
+    print('Plus500 public-directory candidates:',len(entries))
     for i in range(0,len(entries),20):
         batch=entries[i:i+20]; symbols=[x['yahoo_symbol'] for x in batch]
         try:
@@ -71,17 +71,22 @@ def main():
                 symbol=row['yahoo_symbol']
                 try:
                     history=raw[symbol] if isinstance(raw.columns,pd.MultiIndex) else raw
-                    if history.empty:continue
+                    if history.empty:
+                        errors.append(f'{symbol}: no historical data')
+                        continue
                     item=score(history,row['plus500_name'])
+                    if not item:
+                        errors.append(f'{symbol}: insufficient history (<65 sessions)')
                     if item:
-                        item.update(ticker=row['plus500_name'],name=row['company_name'],country=row['country'],currency=row['currency'],yahoo_symbol=symbol,plus500_verified='User-confirmed from screenshots; availability must be rechecked')
+                        item.update(ticker=row['plus500_name'],name=row['company_name'],country=row['country'],currency=row['currency'],yahoo_symbol=symbol,plus500_verified=True,listing_status=row.get('status','public_listing_unverified_account'),listing_source=row.get('listing_source','plus500_public_directory_user_supplied'))
                         results.append(item)
                 except Exception as e:errors.append(f'{symbol}: {str(e)[:100]}')
         except Exception as e:errors.append(f'batch {i}: {str(e)[:100]}')
-        time.sleep(1)
+        time.sleep(0.5)
     if not results:raise SystemExit('No valid market data. Existing published data retained.')
-    payload={'updated_utc':datetime.now(timezone.utc).isoformat(),'source':'Yahoo Finance via yfinance (unofficial, delayed; NOT Plus500 CFD quotes)','universe_size':len(entries),'scanned':len(results),'errors_count':len(errors),'method':'Technical watchlist only; no validated predictions. Plus500 availability based on user screenshots, not live broker verification.','stocks':results}
+    payload={'updated_utc':datetime.now(timezone.utc).isoformat(),'source':'Yahoo Finance via yfinance (unofficial, delayed; NOT Plus500 CFD quotes)','universe_size':len(entries),'scanned':len(results),'errors_count':len(errors),'skipped':len(entries)-len(results),'errors':errors[:250],'method':'Technical watchlist only; no validated predictions. Public directory entries are NOT verified as tradable in an individual account.','stocks':results}
     (DATA/'stocks.json').write_text(json.dumps(payload,separators=(',',':')))
+    (DATA/'scan_errors.json').write_text(json.dumps({'updated_utc':payload['updated_utc'],'skipped':payload['skipped'],'errors':errors},indent=2))
     print('Scanned:',len(results),'errors:',errors[:8])
 
 if __name__=='__main__':main()
