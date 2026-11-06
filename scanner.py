@@ -9,6 +9,8 @@ import pandas as pd
 ROOT=Path(__file__).resolve().parent
 DATA=ROOT/'data'
 DATA.mkdir(exist_ok=True)
+COMPANY_NAMES={}
+KNOWN_NAMES={'BHP': 'BHP Group Limited', 'CBA': 'Commonwealth Bank of Australia', 'CSL': 'CSL Limited', 'WBC': 'Westpac Banking Corporation', 'NAB': 'National Australia Bank Limited', 'ANZ': 'ANZ Group Holdings Limited', 'MQG': 'Macquarie Group Limited', 'WES': 'Wesfarmers Limited', 'WOW': 'Woolworths Group Limited', 'RIO': 'Rio Tinto Limited', 'FMG': 'Fortescue Limited', 'TLS': 'Telstra Group Limited', 'GMG': 'Goodman Group', 'XRO': 'Xero Limited', 'NXT': 'NEXTDC Limited', 'MP1': 'Megaport Limited', 'PLS': 'Pilbara Minerals Limited', 'WDS': 'Woodside Energy Group Ltd', 'QAN': 'Qantas Airways Limited', 'REA': 'REA Group Ltd', 'CAR': 'CAR Group Limited', 'RMD': 'ResMed Inc.', 'COH': 'Cochlear Limited', 'COL': 'Coles Group Limited', 'AMP': 'AMP Limited', 'NST': 'Northern Star Resources Limited', 'NEU': 'Neuren Pharmaceuticals Limited', 'EML': 'EML Payments Limited', 'NEC': 'Nine Entertainment Co. Holdings Limited', 'BXB': 'Brambles Limited'}
 DEFAULT=['BHP','CBA','CSL','WBC','NAB','ANZ','MQG','WES','WOW','RIO','FMG','TLS','GMG','TCL','ALL','XRO','NXT','MP1','SLC','CHC','PLS','LTR','IGO','MIN','PXA','HUB','NWL','AMP','NST','WDS','STO','QAN','REA','CAR','CPU','RMD','COH','JHX','COL','ORG','AGL','SUN','IAG','QBE','S32','ALD','AMC','SHL','PME','TWE','JBH','DMP','A2M','MFG','ZIP','NEA','GQG','SEK','SGP','GPT','SCG','VCX','MGR','DXS','RHC','ILU','ORI','BSL','LYC','PDN','BOE','DRO','HMC','SIG','LNW']
 
 def universe():
@@ -24,6 +26,7 @@ def universe():
             for line in csv.reader(io.StringIO(r.text)):
                 if len(line)>1 and len(line[1].strip()) in (3,4) and line[1].strip().isalpha():
                     raw.append(line[1].strip())
+                    COMPANY_NAMES[line[1].strip().upper()]=line[0].strip()
         except Exception as e:
             print('Directory unavailable:',e)
     raw=raw or DEFAULT
@@ -82,7 +85,9 @@ def main():
                     h=raw[symbol] if isinstance(raw.columns,pd.MultiIndex) else raw
                     if not h.empty:
                         item=score(h,code)
-                        if item:results.append(item)
+                        if item:
+                            item['name']=COMPANY_NAMES.get(code) or KNOWN_NAMES.get(code)
+                            results.append(item)
                 except Exception as e:errors.append(f'{code}: {str(e)[:80]}')
         except Exception as e:errors.append(f'batch {i}: {str(e)[:80]}')
         time.sleep(1)
