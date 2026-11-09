@@ -1,8 +1,7 @@
 {
-  "updated_utc": "2026-11-06T08:31:05.625105+00:00",
-  "skipped": 5,
+  "updated_utc": "2026-11-09T08:47:20.991233+00:00",
+  "skipped": 4,
   "errors": [
-    "MIN.AX: insufficient history (<65 sessions)",
     "WPL.AX: insufficient history (<65 sessions)",
     "IPL.AX: insufficient history (<65 sessions)",
     "BK: insufficient history (<65 sessions)",
