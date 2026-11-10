@@ -1,9 +1,10 @@
 {
-  "updated_utc": "2026-11-09T08:47:20.991233+00:00",
-  "skipped": 4,
+  "updated_utc": "2026-11-10T08:31:29.426998+00:00",
+  "skipped": 5,
   "errors": [
     "WPL.AX: insufficient history (<65 sessions)",
     "IPL.AX: insufficient history (<65 sessions)",
+    "ROKU: insufficient history (<65 sessions)",
     "BK: insufficient history (<65 sessions)",
     "MMC: insufficient history (<65 sessions)"
   ]
