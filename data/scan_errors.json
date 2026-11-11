@@ -1,7 +1,8 @@
 {
-  "updated_utc": "2026-11-10T08:31:29.426998+00:00",
-  "skipped": 5,
+  "updated_utc": "2026-11-11T08:32:05.320708+00:00",
+  "skipped": 6,
   "errors": [
+    "FLT.AX: insufficient history (<65 sessions)",
     "WPL.AX: insufficient history (<65 sessions)",
     "IPL.AX: insufficient history (<65 sessions)",
     "ROKU: insufficient history (<65 sessions)",
