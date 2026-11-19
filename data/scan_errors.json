@@ -1,11 +1,9 @@
 {
-  "updated_utc": "2026-11-18T08:39:41.231251+00:00",
-  "skipped": 6,
+  "updated_utc": "2026-11-19T08:41:58.118282+00:00",
+  "skipped": 4,
   "errors": [
-    "WOW.AX: insufficient history (<65 sessions)",
     "WPL.AX: insufficient history (<65 sessions)",
     "IPL.AX: insufficient history (<65 sessions)",
-    "ROKU: insufficient history (<65 sessions)",
     "BK: insufficient history (<65 sessions)",
     "MMC: insufficient history (<65 sessions)"
   ]
